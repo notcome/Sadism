@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Sadism</title>
+</head>
+<body>
+<div id = "work">
+<button type="button" onclick="next()">Get Start!</button>
+</div>
+<script type="text/javascript">
+  var currentWord;
+  function next() {
+    var ajax = new XMLHttpRequest();
+    ajax.open('GET', 'http://localhost:8888/next-practice', false);
+    ajax.send();
+    var tmp = JSON.parse(ajax.responseText);
+    var time = new Date(new Number(tmp.time)), key = tmp.key;
+    alert(tmp.time);
+
+    var content;
+    if (time < new Date()) content = ViewPractice(key);
+    else content = ViewEdit();
+
+    var container = document.getElementById('work');
+    removeChilds(container);
+    container.appendChild(content);
+  }
+
+  function createNode (type, content) {
+    var t1 = document.createElement(type);
+    var t2 = document.createTextNode(content);
+    t1.appendChild(t2);
+    return t1;
+  }
+
+  function ViewPractice (key) {
+    var container = document.createElement('div');
+    var word = createNode('h1', key.key);
+    var starStr = '';
+    for (var i = 0; i < key.star % 9; i ++) starStr += '*';
+    var star = createNode('p', starStr);
+    var remeber = createNode('button', 'I remeber it!');
+    var forgot = createNode('button', 'I have forgotten it!');
+    remeber.type = forgot.type = 'button';
+    remeber.onclick = 'Remeber()';
+    forgot.onclick = 'Forgot()';
+    currentWord = key;
+    container.appendChild(word);
+    container.appendChild(star);
+    container.appendChild(remeber);
+    container.appendChild(forgot);
+    return container;
+  }
+
+  function Submit (flag) {
+    var ajax = new XMLHttpRequest();
+    ajax.open('GET', 'http://localhost:8888/submit?word=' + currentWord.key + '&succeed=' + flag, false);
+    ajax.send();
+    if (ajax.responseText == 'out-of-date') {
+      alert('out-of-date!');
+      next();
+    }
+    else ViewDefinition(ajax.responseText);
+  }
+
+  function Remeber () { Submit('true'); }
+
+  function Forgot () { Submit('false'); }
+
+  function ViewDefinition (star) {
+    var key = currentWord;
+    key.star = star;
+    var word = createNode('h1', key.key);
+    var starStr = '';
+    for (var i = 0; i < key.star % 9; i ++) starStr += '*';
+    var star = createNode('p', starStr);
+    var value = createNode('p', key.value);
+    var comments = createNode('p', key.comments);
+    var button = createNode('button', 'Next');
+    button.type = 'button';
+    button.onclick = 'next()';
+    var container = document.createElement('div');
+    container.appendChild(word);
+    container.appendChild(star);
+    container.appendChild(value);
+    container.appendChild(comments);
+    container.appendChild(button);
+    var work = document.getElementById('work');
+    removeChilds(work);
+    work.appendChild(container);
+  }
+
+  var removeChilds = function (node) {
+    var last;
+    while (last = node.lastChild) node.removeChild(last);
+  };
+</script>
+</body>
+</html>
