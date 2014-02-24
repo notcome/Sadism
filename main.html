@@ -16,7 +16,6 @@
     ajax.send();
     var tmp = JSON.parse(ajax.responseText);
     var time = new Date(new Number(tmp.time)), key = tmp.key;
-    alert(tmp.time);
 
     var content;
     if (time < new Date()) content = ViewPractice(key);
@@ -43,8 +42,8 @@
     var remeber = createNode('button', 'I remeber it!');
     var forgot = createNode('button', 'I have forgotten it!');
     remeber.type = forgot.type = 'button';
-    remeber.onclick = 'Remeber()';
-    forgot.onclick = 'Forgot()';
+    remeber.onclick = function () { Remeber(); };
+    forgot.onclick = function () { Forgot(); };
     currentWord = key;
     container.appendChild(word);
     container.appendChild(star);
@@ -69,6 +68,7 @@
   function Forgot () { Submit('false'); }
 
   function ViewDefinition (star) {
+    alert(star);
     var key = currentWord;
     key.star = star;
     var word = createNode('h1', key.key);
@@ -79,7 +79,7 @@
     var comments = createNode('p', key.comments);
     var button = createNode('button', 'Next');
     button.type = 'button';
-    button.onclick = 'next()';
+    button.onclick = function () { next(); }
     var container = document.createElement('div');
     container.appendChild(word);
     container.appendChild(star);
