@@ -76,7 +76,7 @@
     for (var i = 0; i < key.star % 9; i ++) starStr += '*';
     var star = createNode('p', starStr);
     var value = createNode('p', key.value);
-    var comments = createNode('p', key.comments);
+    var comments = createNode('p', JSON.stringify(key.comments));
     var button = createNode('button', 'Next');
     button.type = 'button';
     button.onclick = function () { next(); }

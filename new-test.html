@@ -1,0 +1,137 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sadism</title>
+  <link rel="stylesheet" href="css/foundation.css">
+  <script src="js/vendor/modernizr.js"></script>
+</head>
+<body>
+  <div id="view">
+    <div class="row">
+      <div class="large-12 columns">
+        <h1 id="view-word">Hello</h1>
+        <hr>
+        <p id="view-definition">你好</p>
+        <p id="view-examples" class="panel">
+          Hello, world!<br>
+          Hello, <em>Markdown</em>!
+        </p>
+        <button onclick="next()">Next</button>
+        <button onclick="edit()">Edit</button>
+      </div>
+    </div>
+  </div>
+  <div id="edit">
+    <div class="row">
+      <div class="large-12 columns">
+        <h1 id="edit-word">Hello</h1>
+        <hr>
+        <label>Definition</label>
+        <input type="text" id="edit-definition">
+        <label>Examples (in Markdown)</label>
+        <textarea id="edit-examples"></textarea>
+        <button onclick="updateEdit()">Update</button>
+        <button onclick="discardEdit()">Discard</button>
+      </div>
+    </div>
+  </div>
+  <div id="quiz">
+    <div class="row">
+      <div class="large-12 columns">
+        <h1 id="quiz-word">Hello</h1>
+        <hr>
+        <button onclick="submitYes()">Yes, I remeber it.</button>
+        <button onclick="submitNo()">No, I have forgotten it.</button>
+      </div>
+    </div>
+  </div>
+  <div id="new">
+    <div class="row">
+      <div class="large-12 columns">
+      <h1>Add New Flashcard</h1>
+      <hr>
+      <p>Currently there is no flashcard available for quiz. Once you have created a flashcard, there will be fifteen minutes before its first occurrence in quiz</p>
+      <label>Word</label>
+      <input type="text" id="new-word" placeholder="Hello">
+      <label>Definition</label>
+      <input type="text" id="new-definition" placeholder="你好">
+      <label>Examples (in Markdown)</label>
+      <textarea id="new-examples">
+- Hello, world!
+- Hello, *Markdown*!
+      </textarea>
+      <button onclick="submitNew()">Submit</button>
+      </div>
+    </div>
+  </div>
+  <script type="text/javascript">
+    var viewState = 0, editState = 1, quizState = 2, newState = 3;
+    var currentWord;
+
+    intoState(quizState);
+    next();
+
+    function quiz () { mapJson2Html(currentWord, 'quiz'); }
+    function newCard () { intoState(newState); }
+
+    function next () {
+      var ajax = new XMLHttpRequest();
+      ajax.open('GET', 'http://localhost:8888/next', false);
+      ajax.send();
+      if (ajax.responseText == 'none') newCard();
+      else {
+        currentWord = JSON.parse(ajax.responseText);
+        var quizStartTime = new Date(new Number(currentWord.time));
+        if (quizStartTime < new Date()) quiz();
+        else newCard();
+      }
+    }
+
+    function mapJson2Html (object, prefix) {
+      for (var key in object) {
+        var htmlId = prefix + '-' + key;
+        var node = document.getElementById(htmlId);
+        if (node == null) continue;
+        if (node.nodeName == 'INPUT')
+          node.value = object[key];
+        else node.innerHTML = object[key];
+      }
+    }
+
+    function mapHtml2Json (prefix) {
+      var rootNode = document.getElementById(prefix);
+      var object = new Object();
+      function traverse (flag, node, beApplied) {
+        if (node.nodeType != 1) return;
+        if (flag == 0) beApplied(node);
+        for (var i in node.childNodes)
+          traverse(0, node.childNodes[i], beApplied);
+        if (flag == 1) return object;
+      }
+      return traverse(1, rootNode, function (node) {
+        var id = node.getAttribute('id');
+        if (id == null) return;
+        if (id.substr(0, prefix.length) != prefix) return;
+        var key = id.substr(prefix.length + 1);
+        if (node.nodeName == 'INPUT')
+          object[key] = node.value;
+        else object[key] = node.innerHTML;
+      });
+    }
+    
+    function intoState (state) {
+      var array = ['view', 'edit', 'quiz', 'new'];
+      for (var i in array) {
+        var node = document.getElementById(array[i]);
+        if (i == state) node.setAttribute('style', 'display:block');
+        else node.setAttribute('style', 'display:none');
+      }
+    }
+
+    mapJson2Html(theWord, 'quiz');
+
+  </script>
+</body>
+</html>

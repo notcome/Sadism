@@ -40,7 +40,8 @@ function nextPractice(query, response) {
   backend.getPractice(function (err, data) {
     if (err) returnError(500, err, response);
     else backend.getItem(data.key, function (err, item) {
-      if (err) returnError(500, err, response);
+      if (err.type == 'WNOTFOUND') writeResponse(200, 'none', response);
+      else if (err) returnError(500, err, response);
       else {
         data.key = item;
         writeResponse(200, data, response);
@@ -89,7 +90,7 @@ function start() {
     var pathname = url.parse(request.url).pathname;
     var query = querystring.parse(url.parse(request.url).query);
     if (pathname == '/get-item') getItem(query, response);
-    else if (pathname == '/next-practice') nextPractice(query, response);
+    else if (pathname == '/next') nextPractice(query, response);
     else if (pathname == '/submit') submit(query, response);
     else returnError(404, request.url, response);
   }
