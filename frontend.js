@@ -22,9 +22,12 @@ function returnError (code, err, response) {
   console.log(err);
 }
 
-var handler = {
-
-};
+function transform2DB (object) {
+  return { key: object.word, value: object.definition, comments: object.examples };
+}
+function transform2Web (object) {
+  return { word: object.key, definition: object.value, examples: object.comments };
+}
 
 function getItem(query, response) {
   backend.getItem(query.key, function (err, data) {
@@ -32,7 +35,11 @@ function getItem(query, response) {
       var code = err.type == 'WNOTFOUND' ? 404 : 500;
       returnError(code, err, response);
     }
-    else writeResponse(200, data, response);
+    else {
+      data.key = transform2Web(data.key);
+      console.log(data.key);
+      writeResponse(200, data, response);
+    }
   });
 }
 
@@ -40,10 +47,12 @@ function nextPractice(query, response) {
   backend.getPractice(function (err, data) {
     if (err) returnError(500, err, response);
     else backend.getItem(data.key, function (err, item) {
-      if (err.type == 'WNOTFOUND') writeResponse(200, 'none', response);
-      else if (err) returnError(500, err, response);
+      if (err) {
+        if (err.type == 'WNOTFOUND') writeResponse(200, 'none', response);
+        else returnError(500, err, response);
+      }
       else {
-        data.key = item;
+        data.key = transform2Web(item);
         writeResponse(200, data, response);
       }
     })
@@ -89,9 +98,26 @@ function start() {
   function onRequest(request, response) {
     var pathname = url.parse(request.url).pathname;
     var query = querystring.parse(url.parse(request.url).query);
+
     if (pathname == '/get-item') getItem(query, response);
     else if (pathname == '/next') nextPractice(query, response);
     else if (pathname == '/submit') submit(query, response);
+    else if (pathname == '/newcard') {
+      request.setEncoding('utf8');
+      var postData = '';
+
+      request.addListener('data', function(postDataChunk) {
+        postData += postDataChunk;
+      });
+
+      request.addListener('end', function() {
+        console.log('PostData:\n', postData);
+        var newCard = transform2DB(JSON.parse(postData));
+        console.log(newCard);
+        backend.addItem(newCard);
+        writeResponse(200, 'Succeed!', response);
+      });
+    }
     else returnError(404, request.url, response);
   }
 

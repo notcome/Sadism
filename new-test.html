@@ -6,6 +6,9 @@
   <title>Sadism</title>
   <link rel="stylesheet" href="css/foundation.css">
   <script src="js/vendor/modernizr.js"></script>
+  <style>
+    textarea { height: 8em; }
+  </style>
 </head>
 <body>
   <div id="view">
@@ -69,12 +72,34 @@
   <script type="text/javascript">
     var viewState = 0, editState = 1, quizState = 2, newState = 3;
     var currentWord;
+    var newCardExample = {
+      word: 'hello',
+      definition: '你好',
+      examples: '- Hello, world!\n- Hello, *Markdown*!'
+    };
 
     intoState(quizState);
     next();
 
-    function quiz () { mapJson2Html(currentWord, 'quiz'); }
-    function newCard () { intoState(newState); }
+    function quiz () {
+      mapJson2Html(currentWord, 'quiz');
+      intoState(quizState);
+    }
+    function newCard () {
+      mapJson2Html(newCardExample, 'new');
+      intoState(newState); 
+    }
+    function viewDefinition () {
+      mapJson2Html(currentWord, 'view');
+      intoState(viewState);
+    }
+
+    function submitNew () {
+      var newCard = mapHtml2Json('new');
+      var ajax = new XMLHttpRequest();
+      if (ajax.responseText != 'Succeed!') alert('Failed');
+      next();
+    }
 
     function next () {
       var ajax = new XMLHttpRequest();
@@ -84,8 +109,13 @@
       else {
         currentWord = JSON.parse(ajax.responseText);
         var quizStartTime = new Date(new Number(currentWord.time));
+        currentWord = currentWord.key;
+        alert('fuck2');
         if (quizStartTime < new Date()) quiz();
-        else newCard();
+        else {
+          alert('fuck');
+          newCard();
+        }
       }
     }
 
@@ -130,8 +160,15 @@
       }
     }
 
-    mapJson2Html(theWord, 'quiz');
+    function Submit (flag) {
+    var ajax = new XMLHttpRequest();
+    ajax.open('GET', 'http://localhost:8888/submit?word=' + currentWord.key + '&succeed=' + flag, false);
+    ajax.send();
+    viewDefinition();
+  }
 
+  function submitYes () { Submit(true); }
+  function submitNo () { Submit(false); }
   </script>
 </body>
 </html>
