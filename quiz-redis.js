@@ -22,10 +22,14 @@ exports.addAQuiz = function (username, date, time, word, callback) {
 //Get the top quiz of the user's today quiz set.
 //If the quiz set is empty, WNOQUIZ will be returned.
 exports.getAQuiz = function (username, callback) {
-  db.zrange(glue(quizPrefix, today(), username), 0, 0, function (err, data) {
+  var quizSet = glue(quizPrefix, today(), username);
+  db.zrange(quizSet, 0, 0, function (err, data) {
     if (err) callback(err);
     else if (data.length == 0) callback({ code: 'WNOQUIZ', info: username });
-    else callback(null, data[0]);
+    else db.zscore(quizSet, data[0], function (err, time) {
+      if (err) callback(err);
+      else callback({ word: data[0], time: time });
+    });
   });
 };
 

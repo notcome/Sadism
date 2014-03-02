@@ -1,10 +1,12 @@
 var db;
 var termPrefix = 'net.notcome.sadism.wordset';
+var quizAdder;
 
 function glue (s1, s2, s3) { return s3 ? [s1, s2, s3].join('.') : s1 + '.' + s2; }
 
 function putTerm (username, object, callback) {
   db.put(glue(termPrefix, username, object.word), JSON.stringify(object), callback);
+  quizAdder(username, object);
 }
 
 exports.updateTerm = putTerm;
@@ -37,4 +39,4 @@ exports.delItem = function (username, word, callback) {
   });
 }
 
-exports.init = function (levelDB) { db = levelDB; }
+exports.init = function (levelDB, fn) { db = levelDB; quizAdder = fn; }
