@@ -5,6 +5,7 @@ function Quiz (prefix, redisClient) {
 
 Quiz.prototype = {
   get: function (username, callback) {
+    callback ? 0 : callback = function (err) { if (err) throw err; };
     this.client.zrange([this.prefix, username].join('.'), 0, 1, function (err, res) {
       if (err) callback(err);
       else if (res.length == 0) callback('Empty quiz set.');
